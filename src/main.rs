@@ -5,6 +5,7 @@ use warp::{Filter, http::Method};
 
 mod store;
 use store::Store;
+mod profanity;
 mod routes;
 mod types;
 use routes::answer::add_answer;
@@ -12,19 +13,19 @@ use routes::question::{add_question, delete_question, get_questions, update_ques
 
 #[tokio::main]
 async fn main() {
-    let log_filter =
-        std::env::var("RUST_LOG").unwrap_or_else(|_| "handle_errors=warn,q_and_a=info,warp=error".to_owned());
+    let log_filter = std::env::var("RUST_LOG")
+        .unwrap_or_else(|_| "handle_errors=warn,q_and_a=info,warp=error".to_owned());
 
     // if you need to add a username and password,
     // the connection would look like:
     // "postgres://username:password@localhost:5432/q_and_a"
     let store = Store::new("postgres://localhost:5432/q_and_a").await;
-    
+
     sqlx::migrate!()
         .run(&store.clone().connection)
         .await
         .expect("Cannot run migration");
-    
+
     let store_filter = warp::any().map(move || store.clone());
 
     tracing_subscriber::fmt()
