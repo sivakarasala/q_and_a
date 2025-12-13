@@ -12,3 +12,7 @@ handle_errors = { path = "handle_errors" }
 uuid = { version = "1.19.0", features = ["v4"]}
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "migrate", "postgres" ] }
+
+[build-dependencies]
+syn = "1"

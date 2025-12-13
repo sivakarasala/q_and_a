@@ -1,7 +1,7 @@
 #![warn(clippy::all)]
 use handle_errors::return_error;
-use warp::{Filter, http::Method};
 use tracing_subscriber::fmt::format::FmtSpan;
+use warp::{Filter, http::Method};
 
 mod store;
 use store::Store;
@@ -12,10 +12,19 @@ use routes::question::{add_question, delete_question, get_questions, update_ques
 
 #[tokio::main]
 async fn main() {
-    let log_filter = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "q_and_a=info,warp=error".to_owned());
+    let log_filter =
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "handle_errors=warn,q_and_a=info,warp=error".to_owned());
 
-    let store = Store::new();
+    // if you need to add a username and password,
+    // the connection would look like:
+    // "postgres://username:password@localhost:5432/q_and_a"
+    let store = Store::new("postgres://localhost:5432/q_and_a").await;
+    
+    sqlx::migrate!()
+        .run(&store.clone().connection)
+        .await
+        .expect("Cannot run migration");
+    
     let store_filter = warp::any().map(move || store.clone());
 
     tracing_subscriber::fmt()
@@ -56,7 +65,7 @@ async fn main() {
 
     let update_question = warp::put()
         .and(warp::path("questions"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<i32>())
         .and(warp::path::end())
         .and(store_filter.clone())
         .and(warp::body::json())
@@ -64,7 +73,7 @@ async fn main() {
 
     let delete_question = warp::delete()
         .and(warp::path("questions"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<i32>())
         .and(warp::path::end())
         .and(store_filter.clone())
         .and_then(delete_question);

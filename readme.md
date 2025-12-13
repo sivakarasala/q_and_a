@@ -1,0 +1,42 @@
+# PostgresDB Install
+
+```
+brew install postgresql@14
+
+brew services start postgresql@14
+
+psql postgres
+
+create database q_and_a;
+
+List all databases -> \l
+
+Quit -> \q
+
+
+CREATE TABLE IF NOT EXISTS questions (
+    id serial PRIMARY KEY,
+    title VARCHAR (255) NOT NULL,
+    content TEXT NOT NULL,
+    tags TEXT [],
+    created_on TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS answers (
+    id serial PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    corresponding_question integer REFERENCES questions
+);
+
+
+List tables -> \dt
+
+drop table answers, questions;
+\dt
+
+sqlx migrate add -r questions_table
+sqlx migrate run --database-url postgresql://localhost:5432/q_and_a
+sqlx migrate revert --database-url postgresql://localhost:5432/q_and_a
+
+```
