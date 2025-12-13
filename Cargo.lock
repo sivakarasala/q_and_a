@@ -200,6 +200,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "handle_errors"
+version = "0.1.0"
+dependencies = [
+ "warp",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -591,6 +598,7 @@ dependencies = [
 name = "q_and_a"
 version = "0.1.0"
 dependencies = [
+ "handle_errors",
  "serde",
  "serde_json",
  "tokio",
