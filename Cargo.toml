@@ -1,0 +1,9 @@
+[package]
+name = "q_and_a"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+warp = "0.3"
+tokio = { version = "1.2", features = ["full"] }
+serde = { version = "1.0", features = ["derive"]}
