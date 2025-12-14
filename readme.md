@@ -92,4 +92,23 @@ panic = 'unwind'
 incremental = false
 codegen-units = 16
 rpath = false
+
+
+
+sudo -u <USERNAME> psql
+
+createdb
+
+sudo -u <USERNAME> psql
+
+<USERNAME>=# create user username with encrypted password 'password';
+CREATE ROLE
+<USERNAME>=# grant all privileges on database 'dbname' to username;
+GRANT
+<USERNAME>=#
+
+\connect 'dbname';
+GRANT INSERT, SELECT ON ALL TABLES IN SCHEMA public TO username;
+
+cargo run -- --log-level info
 ```

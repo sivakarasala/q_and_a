@@ -1,12 +1,12 @@
 #![warn(clippy::all)]
-use clap::Parser;
 use handle_errors::return_error;
+use std::env;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{Filter, http::Method};
-use std::env;
 
 mod store;
 use store::Store;
+mod config;
 mod profanity;
 mod routes;
 mod types;
@@ -15,49 +15,14 @@ use routes::question::{add_question, delete_question, get_questions, update_ques
 
 use crate::routes::authentication::{auth, login, register};
 
-/// Q&A web service API
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct Args {
-    /// Which errors we want to log (info, warn or error)
-    #[clap(short, long, default_value = "warn")]
-    log_level: String,
-    /// URL for the postgres database
-    #[clap(long, default_value = "localhost")]
-    db_host: String,
-    /// PORT number for the database connection
-    #[clap(long, default_value = "5432")]
-    db_port: u16,
-    /// Database name
-    #[clap(long, default_value = "q_and_a")]
-    db_name: String,
-    /// Which PORT the server is listening to
-    #[clap(short, long, default_value = "8080")]
-    port: u16,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), handle_errors::Error> {
-    dotenv::dotenv().ok();
-    if let Err(_) = env::var("BAD_WORDS_API_KEY") {
-        panic!("BadWords API key not set");
-    }
-    
-    if let Err(_) = env::var("PASETO_KEY") {
-        panic!("PASETO key not set");
-    }
-
-    let port = std::env::var("PORT")
-        .ok()
-        .map(|val| val.parse::<u16>())
-        .unwrap_or(Ok(8080))
-        .map_err(|e| handle_errors::Error::ParseError(e))?;
-    let args = Args::parse();
+    let config = config::Config::new().expect("Config can't be set");
 
     let log_filter = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         format!(
             "handle_errors={},q_and_a={},warp={}",
-            args.log_level, args.log_level, args.log_level
+            config.log_level, config.log_level, config.log_level
         )
     });
 
@@ -65,14 +30,16 @@ async fn main() -> Result<(), handle_errors::Error> {
     // the connection would look like:
     // "postgres://username:password@localhost:5432/q_and_a"
     let store = Store::new(&format!(
-        "postgres://{}:{}/{}",
-        args.db_host, args.db_port, args.db_name
+        "postgres://{}:{}@{}:{}/{}",
+        config.db_user, config.db_password, config.db_host, config.db_port, config.db_name
     ))
     .await
-    .map_err(|e| handle_errors::Error::DatabaseQueryError(e))?; 
+    .map_err(|e| handle_errors::Error::DatabaseQueryError(e))?;
 
-    sqlx::migrate!().run(&store.clone().connection).await
-    .map_err(|e| handle_errors::Error::MigrationError(e))?; 
+    sqlx::migrate!()
+        .run(&store.clone().connection)
+        .await
+        .map_err(|e| handle_errors::Error::MigrationError(e))?;
 
     let store_filter = warp::any().map(move || store.clone());
 
@@ -163,6 +130,6 @@ async fn main() -> Result<(), handle_errors::Error> {
         .with(warp::trace::request())
         .recover(return_error);
     tracing::info!("Q&A service build ID {}", env!("Q_AND_A_VERSION"));
-    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], config.port)).await;
     Ok(())
 }
