@@ -1242,6 +1242,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mock-server"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "serde_json",
+ "tokio",
+ "warp",
+]
+
+[[package]]
 name = "multer"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1636,6 +1646,7 @@ dependencies = [
  "config",
  "dotenv",
  "handle_errors",
+ "mock-server",
  "openssl",
  "paseto",
  "platforms",
