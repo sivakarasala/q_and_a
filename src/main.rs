@@ -11,7 +11,7 @@ mod types;
 use routes::answer::add_answer;
 use routes::question::{add_question, delete_question, get_questions, update_question};
 
-use crate::routes::authentication::register;
+use crate::routes::authentication::{login, register};
 
 #[tokio::main]
 async fn main() {
@@ -95,12 +95,20 @@ async fn main() {
         .and(warp::body::json())
         .and_then(register);
 
+    let login = warp::post()
+        .and(warp::path("login"))
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and(warp::body::json())
+        .and_then(login);
+
     let routes = get_questions
         .or(add_question)
         .or(update_question)
         .or(delete_question)
         .or(add_answer)
         .or(registration)
+        .or(login)
         .with(cors)
         .with(warp::trace::request())
         .recover(return_error);
