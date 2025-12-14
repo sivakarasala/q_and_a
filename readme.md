@@ -49,4 +49,19 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 DROP TABLE IF EXISTS accounts;
 
+sqlx migrate add -r extend_questions_table;
+sqlx migrate add -r extend_answers_table;
+
+ALTER TABLE questions
+ADD COLUMN account_id serial;
+
+ALTER TABLE questions
+DROP COLUMN account_id;
+
+ALTER TABLE answers
+ADD COLUMN account_id serial;
+
+ALTER TABLE answers
+DROP COLUMN account_id;
+
 ```

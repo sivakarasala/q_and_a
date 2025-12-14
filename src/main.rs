@@ -11,7 +11,7 @@ mod types;
 use routes::answer::add_answer;
 use routes::question::{add_question, delete_question, get_questions, update_question};
 
-use crate::routes::authentication::{login, register};
+use crate::routes::authentication::{auth, login, register};
 
 #[tokio::main]
 async fn main() {
@@ -62,6 +62,7 @@ async fn main() {
     let add_question = warp::post()
         .and(warp::path("questions"))
         .and(warp::path::end())
+        .and(auth())
         .and(store_filter.clone())
         .and(warp::body::json())
         .and_then(add_question);
@@ -70,6 +71,7 @@ async fn main() {
         .and(warp::path("questions"))
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
+        .and(auth())
         .and(store_filter.clone())
         .and(warp::body::json())
         .and_then(update_question);
@@ -78,12 +80,14 @@ async fn main() {
         .and(warp::path("questions"))
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
+        .and(auth())
         .and(store_filter.clone())
         .and_then(delete_question);
 
     let add_answer = warp::post()
         .and(warp::path("answers"))
         .and(warp::path::end())
+        .and(auth())
         .and(store_filter.clone())
         .and(warp::body::form())
         .and_then(add_answer);
