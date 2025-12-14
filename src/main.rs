@@ -11,6 +11,8 @@ mod types;
 use routes::answer::add_answer;
 use routes::question::{add_question, delete_question, get_questions, update_question};
 
+use crate::routes::authentication::register;
+
 #[tokio::main]
 async fn main() {
     let log_filter = std::env::var("RUST_LOG")
@@ -86,11 +88,19 @@ async fn main() {
         .and(warp::body::form())
         .and_then(add_answer);
 
+    let registration = warp::post()
+        .and(warp::path("registration"))
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and(warp::body::json())
+        .and_then(register);
+
     let routes = get_questions
         .or(add_question)
         .or(update_question)
         .or(delete_question)
         .or(add_answer)
+        .or(registration)
         .with(cors)
         .with(warp::trace::request())
         .recover(return_error);

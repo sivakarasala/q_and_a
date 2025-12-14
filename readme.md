@@ -39,4 +39,14 @@ sqlx migrate add -r questions_table
 sqlx migrate run --database-url postgresql://localhost:5432/q_and_a
 sqlx migrate revert --database-url postgresql://localhost:5432/q_and_a
 
+sqlx migrate add -r create_accounts_table
+
+CREATE TABLE IF NOT EXISTS accounts (
+    id serial NOT NULL,
+    email VARCHAR(255) NOT NULL PRIMARY KEY,
+    password VARCHAR(255) NOT NULL
+);
+
+DROP TABLE IF EXISTS accounts;
+
 ```

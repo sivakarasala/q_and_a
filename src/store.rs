@@ -3,6 +3,7 @@ use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
 
 use handle_errors::Error;
 
+use crate::types::account::Account;
 use crate::types::{
     answer::{Answer, AnswerId, NewAnswer},
     question::{NewQuestion, Question, QuestionId},
@@ -48,7 +49,7 @@ impl Store {
             Ok(questions) => Ok(questions),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -74,7 +75,7 @@ impl Store {
             Ok(question) => Ok(question),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -106,7 +107,7 @@ impl Store {
             Ok(question) => Ok(question),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -120,7 +121,7 @@ impl Store {
             Ok(_) => Ok(true),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }
@@ -138,9 +139,46 @@ impl Store {
             .await
         {
             Ok(answer) => Ok(answer),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                tracing::event!(
+                    tracing::Level::ERROR,
+                    code = error
+                        .as_database_error()
+                        .unwrap()
+                        .code()
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap(),
+                    db_message = error.as_database_error().unwrap().message(),
+                    constraint = error.as_database_error().unwrap().constraint().unwrap()
+                );
+                Err(Error::DatabaseQueryError(error))
+            }
+        }
+    }
+
+    pub async fn add_account(self, account: Account) -> Result<bool, Error> {
+        match sqlx::query("INSERT INTO accounts (email, password) VALUES ($1, $2)")
+            .bind(account.email)
+            .bind(account.password)
+            .execute(&self.connection)
+            .await
+        {
+            Ok(_) => Ok(true),
+            Err(error) => {
+                tracing::event!(
+                    tracing::Level::ERROR,
+                    code = error
+                        .as_database_error()
+                        .unwrap()
+                        .code()
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap(),
+                    db_message = error.as_database_error().unwrap().message(),
+                    constraint = error.as_database_error().unwrap().constraint().unwrap()
+                );
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
