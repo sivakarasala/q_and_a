@@ -1,6 +1,5 @@
 #![warn(clippy::all)]
 use clap::Parser;
-use config::Config;
 use handle_errors::return_error;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{Filter, http::Method};
@@ -15,27 +14,35 @@ use routes::question::{add_question, delete_question, get_questions, update_ques
 
 use crate::routes::authentication::{auth, login, register};
 
-#[derive(Parser, Debug, Default, serde::Deserialize, PartialEq)]
+/// Q&A web service API
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
 struct Args {
+    /// Which errors we want to log (info, warn or error)
+    #[clap(short, long, default_value = "warn")]
     log_level: String,
-    database_host: String,
-    database_port: u16,
-    database_name: String,
+    /// URL for the postgres database
+    #[clap(long, default_value = "localhost")]
+    db_host: String,
+    /// PORT number for the database connection
+    #[clap(long, default_value = "5432")]
+    db_port: u16,
+    /// Database name
+    #[clap(long, default_value = "q_and_a")]
+    db_name: String,
+    /// Which PORT the server is listening to
+    #[clap(short, long, default_value = "8080")]
     port: u16,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    let config = Config::builder()
-        .add_source(config::File::with_name("setup"))
-        .build()
-        .unwrap();
-    let config = config.try_deserialize::<Args>().unwrap();
+    let args = Args::parse();
 
     let log_filter = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         format!(
             "handle_errors={},q_and_a={},warp={}",
-            config.log_level, config.log_level, config.log_level
+            args.log_level, args.log_level, args.log_level
         )
     });
 
@@ -44,7 +51,7 @@ async fn main() -> Result<(), sqlx::Error> {
     // "postgres://username:password@localhost:5432/q_and_a"
     let store = Store::new(&format!(
         "postgres://{}:{}/{}",
-        config.database_host, config.database_port, config.database_name
+        args.db_host, args.db_port, args.db_name
     ))
     .await?;
 
@@ -139,6 +146,6 @@ async fn main() -> Result<(), sqlx::Error> {
         .with(warp::trace::request())
         .recover(return_error);
 
-    warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;
     Ok(())
 }

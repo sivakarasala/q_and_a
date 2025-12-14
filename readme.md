@@ -64,4 +64,6 @@ ADD COLUMN account_id serial;
 ALTER TABLE answers
 DROP COLUMN account_id;
 
+cargo run -- --db-host localhost --log-level warn --db-name q_and_a --db-port 5432 --port 8080
+
 ```
