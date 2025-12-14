@@ -19,6 +19,7 @@ pub enum Error {
     Unauthorized,
     ArgonLibraryError(ArgonError),
     DatabaseQueryError(sqlx::Error),
+    MigrationError(sqlx::migrate::MigrateError),
     ReqwestAPIError(ReqwestError),
     MiddlewareReqwestAPIError(MiddlewareReqwestError),
     ClientError(APILayerError),
@@ -55,6 +56,7 @@ impl std::fmt::Display for Error {
             Error::DatabaseQueryError(_) => {
                 write!(f, "Cannot update, invalid data.")
             }
+            Error::MigrationError(_) => write!(f, "Cannot migrate data"),
             Error::ReqwestAPIError(err) => {
                 write!(f, "External API error: {}", err)
             }

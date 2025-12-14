@@ -28,3 +28,4 @@ openssl = { version = "0.10.32", features = ["vendored"] }
 
 [build-dependencies]
 syn = "1"
+platforms = "2.0.0"

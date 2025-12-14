@@ -66,4 +66,30 @@ DROP COLUMN account_id;
 
 cargo run -- --db-host localhost --log-level warn --db-name q_and_a --db-port 5432 --port 8080
 
+rustup target install x86_64-apple-darwin
+cargo build --release --target x86_64-apple-darwin
+
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = '...' # Platform-specific.
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+rpath = false
+
+[profile.release]
+opt-level = 3
+debug = false
+split-debuginfo = '...' # Platform-specific.
+debug-assertions = false
+overflow-checks = false
+lto = false
+panic = 'unwind'
+incremental = false
+codegen-units = 16
+rpath = false
 ```
